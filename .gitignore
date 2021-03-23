@@ -1,0 +1,27 @@
+### STS ###
+**/.apt_generated
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings
+**/.springBeans
+**/.sts4-cache
+
+### IntelliJ IDEA ###
+**/.idea/*
+!**/.idea/codeStyles
+!**/.idea/copyright
+
+**/*.iws
+**/*.iml
+**/*.ipr
+
+### Maven ###
+**/target
+
+### Project
+testing/infrastructure/docker-compose.yml
+
+### Custom ###
+service/src/main/resources/application-local.properties
+service/src/main/resources/logback-spring.xml
