@@ -1,0 +1,29 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          gh:
+            client-id: 0cbc59173c54bb6e9735
+            client-secret: 1093b0dbc4458616beb850ef4e6084fc702d754f
+            scope: read:user
+            authorization-grant-type: authorization_code
+            redirectUri: http://localhost:8082/client/login/oauth2/code/github
+        provider:
+          gh:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: id
+            clent-name: GitHub
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8082
+  servlet:
+    context-path: /client
+
+logging:
+  level:
+    org.springframework: INFO
