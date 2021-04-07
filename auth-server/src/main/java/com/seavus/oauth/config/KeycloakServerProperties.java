@@ -7,7 +7,7 @@ public class KeycloakServerProperties {
 
     String contextPath = "/auth";
 
-    String realmImportFile = "seavus-realm.json";
+    String realmImportFile = "custom-realm.json";
 
     AdminUser adminUser = new AdminUser();
 
