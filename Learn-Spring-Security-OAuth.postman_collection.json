@@ -1,0 +1,1028 @@
+{
+	"info": {
+		"_postman_id": "336f3bb1-a4b9-45c0-b5ef-b5ab03115088",
+		"name": "Learn-Spring-Security-OAuth",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authorization Server",
+			"item": [
+				{
+					"name": "Authorization Code",
+					"item": [
+						{
+							"name": "Extract Authorization Endpoint",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const $ = cheerio.load(pm.response.text());",
+											"const formAction = $('#kc-form-login').attr('action');",
+											"",
+											"pm.collectionVariables.set(\"formAction\", formAction);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8083/auth/realms/custom/protocol/openid-connect/auth?response_type=code&client_id=web-ui&scope=read&redirect_uri=http://localhost:8080/login/oauth2/code/custom",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8083",
+									"path": [
+										"auth",
+										"realms",
+										"custom",
+										"protocol",
+										"openid-connect",
+										"auth"
+									],
+									"query": [
+										{
+											"key": "response_type",
+											"value": "code"
+										},
+										{
+											"key": "client_id",
+											"value": "web-ui"
+										},
+										{
+											"key": "scope",
+											"value": "read"
+										},
+										{
+											"key": "redirect_uri",
+											"value": "http://localhost:8080/login/oauth2/code/custom"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Authorization Code",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var redirectLocation = pm.response.headers.get(\"Location\"),",
+											"  sdk = require('postman-collection'),",
+											"  url = new sdk.Url(redirectLocation),",
+											"  code = url.query.find(param => param.key === \"code\").value;",
+											"  ",
+											"pm.collectionVariables.set(\"authCode\", code);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"followRedirects": false
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "username",
+											"value": "vlade.maksimovic@seavus.com",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "123",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{formAction}}",
+									"host": [
+										"{{formAction}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Access Token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var accessToken = pm.response.json().access_token;",
+											"  ",
+											"pm.collectionVariables.set(\"accessToken\", accessToken);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/x-www-form-urlencoded"
+									},
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "grant_type",
+											"value": "authorization_code",
+											"type": "text"
+										},
+										{
+											"key": "client_id",
+											"value": "web-ui",
+											"type": "text"
+										},
+										{
+											"key": "client_secret",
+											"value": "web-ui",
+											"type": "text"
+										},
+										{
+											"key": "redirect_uri",
+											"value": "http://localhost:8080/login/oauth2/code/custom",
+											"type": "text"
+										},
+										{
+											"key": "code",
+											"value": "{{authCode}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8083/auth/realms/custom/protocol/openid-connect/token",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8083",
+									"path": [
+										"auth",
+										"realms",
+										"custom",
+										"protocol",
+										"openid-connect",
+										"token"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Projects",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJoMDRlc3JzaWp4UHJHeU1sQzMzOFVEVS1qSE5vMm9oSkpsT2tMMHUxSk9rIn0.eyJleHAiOjE2MTc3OTk4NjksImlhdCI6MTYxNzc5OTU2OSwiYXV0aF90aW1lIjoxNjE3Nzk5NTY1LCJqdGkiOiIwZDJjNmMwYi01NGUwLTQ5M2ItYjRmNC05ZGQ1NzcxMzBmZDkiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODMvYXV0aC9yZWFsbXMvY3VzdG9tIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6ImE1NDYxNDcwLTMzZWItNGIyZC04MmQ0LWIwNDg0ZTk2YWQ3ZiIsInR5cCI6IkJlYXJlciIsImF6cCI6IndlYi11aSIsInNlc3Npb25fc3RhdGUiOiJlNjkxYzJiYy1kZjI4LTRiOTgtYWM3ZS1hNjk5ZjQwMjAwOGMiLCJhY3IiOiIxIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgcmVhZCBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoidmxhZGUubWFrc2ltb3ZpY0BzZWF2dXMuY29tIn0.OYNjrqYMdcE3H4NTHW8LSu4ooz1fwB0UpZ36n_hiOn2lwJ-lGDXQjqVGTtWPN_pmpHLgxdkrtJOpcOwGR_gz51sMwpRTQUNWg--NnBiVgtTuyFakF3IrbRCm69O-7RBy1czGdEPQXyVOuMexFD3B00__ZjXn2jycl5WNptNXRqLC6i1OKcDcrU98T6KdR3oqcSSq-7_TZ7t_1rULPJPfkZxs--XsIU2GlFsbxhUfBLLwomkFnITs-KXOLHU--X9iIBe6RscSIQvvwkCTgZb8W_I3-Tp2WEouwpIAX8xB67ZOQ1QXqazWSgnRtlph_EniVUM_nqMhawbdUASmugb9og",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8081/resource-server/api/projects",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"resource-server",
+										"api",
+										"projects"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Implicit",
+					"item": [
+						{
+							"name": "Extract Authorization Endpoint",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const $ = cheerio.load(pm.response.text());",
+											"const formAction = $('#kc-form-login').attr('action');",
+											"",
+											"pm.collectionVariables.set(\"formAction\", formAction);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "http://localhost:8083/auth/realms/custom/protocol/openid-connect/auth?response_type=token&client_id=web-ui&redirect_uri=http://localhost:8080&scope=read",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8083",
+									"path": [
+										"auth",
+										"realms",
+										"custom",
+										"protocol",
+										"openid-connect",
+										"auth"
+									],
+									"query": [
+										{
+											"key": "response_type",
+											"value": "token"
+										},
+										{
+											"key": "client_id",
+											"value": "web-ui"
+										},
+										{
+											"key": "redirect_uri",
+											"value": "http://localhost:8080"
+										},
+										{
+											"key": "scope",
+											"value": "read"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Access Token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var redirectLocation = pm.response.headers.get(\"Location\"),",
+											"  sdk = require('postman-collection'),",
+											"  url = new sdk.Url(redirectLocation),",
+											"  accessToken = url.query.find(param => param.key === \"access_token\");",
+											"",
+											"pm.collectionVariables.set(\"redirect\", redirectLocation);  "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"warning": "This is a duplicate header and will be overridden by the Content-Type header generated by Postman.",
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "username",
+											"value": "vlade.maksimovic@seavus.com",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "123",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{formAction}}",
+									"host": [
+										"{{formAction}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Projects",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJoMDRlc3JzaWp4UHJHeU1sQzMzOFVEVS1qSE5vMm9oSkpsT2tMMHUxSk9rIn0.eyJleHAiOjE2MTc4MDA1MTAsImlhdCI6MTYxNzc5OTYxMCwiYXV0aF90aW1lIjoxNjE3Nzk5NjEwLCJqdGkiOiJkMjk3YjMxNi0xNGVkLTRhNjUtODdiMS0xNGJhMzQxMjU0MDMiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODMvYXV0aC9yZWFsbXMvY3VzdG9tIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6ImE1NDYxNDcwLTMzZWItNGIyZC04MmQ0LWIwNDg0ZTk2YWQ3ZiIsInR5cCI6IkJlYXJlciIsImF6cCI6IndlYi11aSIsInNlc3Npb25fc3RhdGUiOiI2ZWQ2ZTVjNC1jMmVlLTRjMWItOWNhMS0zNTJkNDkxMzA2ZjQiLCJhY3IiOiIxIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgcmVhZCBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoidmxhZGUubWFrc2ltb3ZpY0BzZWF2dXMuY29tIn0.W3TZOLP333NcowKRCFV10WbZ0Dd25DaIHhXNvFePdWNmJVX3V28IQxgZRjLeC0jpPXTr2C4J0O2VDw_PnHf2jtjoI1ma4tbBYp_JNx-ZBN04G5OvyVAmIBvvwjVrI-ZnnRK8mFrU7CPwTTci4MuZ-EoIq_0AFs1kTmMDwHBEaMJgQbmt1ZVk3aLkuGsUU59ps8GER5_uqnWhDN6t8c8Utr0jpOfOBDCP9nbiy-hXnDZAtMJ3NO58TlugzPh0_ho0mIUyqRdIiBLTpfQiJZ6n3t_TlXBLWxpaJVqWKwz1FKGXXwdMk9IxEpiIS-4SOmyw_hmMMnxW5KZLw0nRotEeiA",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "http://localhost:8081/resource-server/api/projects",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"resource-server",
+										"api",
+										"projects"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Client Credentials",
+					"item": [
+						{
+							"name": "Request Access Token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "web-ui",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "web-ui",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "grant_type",
+											"value": "client_credentials",
+											"type": "text"
+										},
+										{
+											"key": "scope",
+											"value": "read write",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8083/auth/realms/custom/protocol/openid-connect/token",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8083",
+									"path": [
+										"auth",
+										"realms",
+										"custom",
+										"protocol",
+										"openid-connect",
+										"token"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Projects",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJoMDRlc3JzaWp4UHJHeU1sQzMzOFVEVS1qSE5vMm9oSkpsT2tMMHUxSk9rIn0.eyJleHAiOjE2MTc3OTk5ODcsImlhdCI6MTYxNzc5OTY4NywianRpIjoiYmZhMjNhZTItYmM4Zi00NThlLWFiMDItZDBmMjQ1NTkzMTVkIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgzL2F1dGgvcmVhbG1zL2N1c3RvbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJmZTNlZGRhMS1kNzRiLTRjYjMtYTdhZi05NDY0NjM0ZmRjOTgiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJ3ZWItdWkiLCJzZXNzaW9uX3N0YXRlIjoiYjYzMjRiNTYtNjNiZS00MmRlLWI4ZWEtYmQ5NTJjNGZhOGFkIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJ3cml0ZSBwcm9maWxlIHJlYWQgZW1haWwiLCJjbGllbnRJZCI6IndlYi11aSIsImNsaWVudEhvc3QiOiIwOjA6MDowOjA6MDowOjEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC13ZWItdWkiLCJjbGllbnRBZGRyZXNzIjoiMDowOjA6MDowOjA6MDoxIn0.B7PHh_fagASpxL6MCjbQcMuLu2RnOCOnzyGNXShClWlgscgUcJHKv7EiEKJxSKaKYaoDDJo94OxVEmrK45-ezJ-zeEeauyB3VEhuK3N65I7keBUCl0Qt-1g-xGMOoDvF-wsaAFLeEArJZxlPTeegKDu_8l5k54GcJDW93SVNNZLd4oT1t7Mz8ZqsgxpudrvX4p94W04xIcVDJ7EnjMVXVwT2HbV8JEj4O0mojuJFRBhZSaXqmtEyuoYqV0m1BAqvipBnrAzRU16aelo6oz6eBQKF5yBBSlWDyfE7igfxV4f3gJ4w9SFX7HyJMvHHqjIVT3NHCLQl9zl6gFlxQDN6oA",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "http://localhost:8081/resource-server/api/projects",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"resource-server",
+										"api",
+										"projects"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Password",
+					"item": [
+						{
+							"name": "Request Access Token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "web-ui",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "web-ui",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "grant_type",
+											"value": "password",
+											"type": "text"
+										},
+										{
+											"key": "username",
+											"value": "vlade.maksimovic@seavus.com",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "123",
+											"type": "text"
+										},
+										{
+											"key": "scope",
+											"value": "read write",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8083/auth/realms/custom/protocol/openid-connect/token",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8083",
+									"path": [
+										"auth",
+										"realms",
+										"custom",
+										"protocol",
+										"openid-connect",
+										"token"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Projects",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJoMDRlc3JzaWp4UHJHeU1sQzMzOFVEVS1qSE5vMm9oSkpsT2tMMHUxSk9rIn0.eyJleHAiOjE2MTc4MDAwMTIsImlhdCI6MTYxNzc5OTcxMiwianRpIjoiNWU3MjdjZTEtZjUyNi00M2Y5LWEzZTItMTBlMDExYmQ5M2ZiIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgzL2F1dGgvcmVhbG1zL2N1c3RvbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJhNTQ2MTQ3MC0zM2ViLTRiMmQtODJkNC1iMDQ4NGU5NmFkN2YiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJ3ZWItdWkiLCJzZXNzaW9uX3N0YXRlIjoiYjBkZjViNWYtODBiYi00ZGU1LWI0OGYtOGJmM2FmNWE2NzBjIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJ3cml0ZSBwcm9maWxlIHJlYWQgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6InZsYWRlLm1ha3NpbW92aWNAc2VhdnVzLmNvbSJ9.n2S0kzGNdbXV-PoKZ6tDNpF1_cvDXmTuXSzNrJBMGgdVuzEy6lLnuZfubB8cYKU6LTIO1FClrWrbhVU6v9HQcqN_QWF84ZJ--WPBpmWNiRCj1LwS6boLdI2yQprIL3yZ2O-AmqHgy1NAQZSmVp5VwFPo5dcpkzwlqZDRRE4eztaKUQLHdhc8JaD1u40HX0F1rWtxD2JkpLfll5eOrh1iyii3qUg7l0sa5z4QeABh2Q8s-OiF2srPoLuoYM_G7podZA5jpTMMdG1BWwb3h_3IPAEy--6e6XAa8ECagZ2pzmf4KMsb-mQbFOt620rPjgD2xaoNq66LCRWgcfeMny8iXA",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "http://localhost:8081/resource-server/api/projects",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"resource-server",
+										"api",
+										"projects"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Refreshing a Token",
+					"item": [
+						{
+							"name": "Extract Authorization Endpoint",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const $ = cheerio.load(pm.response.text());",
+											"const formAction = $('#kc-form-login').attr('action');",
+											"",
+											"pm.collectionVariables.set(\"formAction\", formAction);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8083/auth/realms/custom/protocol/openid-connect/auth?response_type=code&client_id=web-ui&scope=read&redirect_uri=http://localhost:8080/login/oauth2/code/custom",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8083",
+									"path": [
+										"auth",
+										"realms",
+										"custom",
+										"protocol",
+										"openid-connect",
+										"auth"
+									],
+									"query": [
+										{
+											"key": "response_type",
+											"value": "code"
+										},
+										{
+											"key": "client_id",
+											"value": "web-ui"
+										},
+										{
+											"key": "scope",
+											"value": "read"
+										},
+										{
+											"key": "redirect_uri",
+											"value": "http://localhost:8080/login/oauth2/code/custom"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Authorization Code",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var redirectLocation = pm.response.headers.get(\"Location\"),",
+											"  sdk = require('postman-collection'),",
+											"  url = new sdk.Url(redirectLocation),",
+											"  code = url.query.find(param => param.key === \"code\").value;",
+											"  ",
+											"pm.collectionVariables.set(\"authCode\", code);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"followRedirects": false
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "username",
+											"value": "vlade.maksimovic@seavus.com",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "123",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{formAction}}",
+									"host": [
+										"{{formAction}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Access Token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var refreshToken = pm.response.json().refresh_token;",
+											"  ",
+											"pm.collectionVariables.set(\"refreshToken\", refreshToken);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/x-www-form-urlencoded"
+									},
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "grant_type",
+											"value": "authorization_code",
+											"type": "text"
+										},
+										{
+											"key": "client_id",
+											"value": "web-ui",
+											"type": "text"
+										},
+										{
+											"key": "client_secret",
+											"value": "web-ui",
+											"type": "text"
+										},
+										{
+											"key": "redirect_uri",
+											"value": "http://localhost:8080/login/oauth2/code/custom",
+											"type": "text"
+										},
+										{
+											"key": "code",
+											"value": "{{authCode}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8083/auth/realms/custom/protocol/openid-connect/token",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8083",
+									"path": [
+										"auth",
+										"realms",
+										"custom",
+										"protocol",
+										"openid-connect",
+										"token"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Refresh Token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var refreshToken = pm.response.json().refresh_token;",
+											"  ",
+											"pm.collectionVariables.set(\"refreshToken\", refreshToken);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/x-www-form-urlencoded"
+									},
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "grant_type",
+											"value": "refresh_token",
+											"type": "text"
+										},
+										{
+											"key": "client_id",
+											"value": "web-ui",
+											"type": "text"
+										},
+										{
+											"key": "client_secret",
+											"value": "web-ui",
+											"type": "text"
+										},
+										{
+											"key": "refresh_token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI3NjY5MTBhYS1lM2NmLTQ2NjgtYWU4Yi0zZTBkYjg1N2Q4NzUifQ.eyJleHAiOjE2MTc4MDE1ODEsImlhdCI6MTYxNzc5OTc4MSwianRpIjoiNTNkOGIxNDItOTQyMi00YzMwLWJjMWQtNmZmOGVhZjkyYzc2IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgzL2F1dGgvcmVhbG1zL2N1c3RvbSIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4My9hdXRoL3JlYWxtcy9jdXN0b20iLCJzdWIiOiJhNTQ2MTQ3MC0zM2ViLTRiMmQtODJkNC1iMDQ4NGU5NmFkN2YiLCJ0eXAiOiJSZWZyZXNoIiwiYXpwIjoid2ViLXVpIiwic2Vzc2lvbl9zdGF0ZSI6IjY0YzE0ZTdiLWVmNmMtNGU2OS04OTMzLWFmYjFlYmVkMTdhOSIsInNjb3BlIjoicHJvZmlsZSByZWFkIGVtYWlsIn0.4BXym40i99YpQZyRd05t_XAcfrJBnxxFN_rzZjGCSoQ",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8083/auth/realms/custom/protocol/openid-connect/token",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8083",
+									"path": [
+										"auth",
+										"realms",
+										"custom",
+										"protocol",
+										"openid-connect",
+										"token"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"item": [
+						{
+							"name": "Logout",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8083/auth/realms/custom/protocol/openid-connect/logout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8083",
+									"path": [
+										"auth",
+										"realms",
+										"custom",
+										"protocol",
+										"openid-connect",
+										"logout"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "form-action",
+			"value": "http://localhost:8083/auth/realms/custom/login-actions/authenticate?session_code=uVL9FwZnVdGXo5vDi3AYh8B7gqFOBasOYVGafJMckLo&execution=3502ea0b-98b1-4d4b-b9ba-cfc78bbc0748&client_id=lssoClient&tab_id=KyWJLfGKAwo"
+		},
+		{
+			"key": "formAction",
+			"value": "http://localhost:8083/auth/realms/custom/login-actions/authenticate?session_code=9L4cSU2bJ4qedwneJxiSicaX0gewLhczW_cjDbU2Hbs&execution=0cd44dee-396b-4103-bbb8-136d29bf05d4&client_id=lssoClient&tab_id=9jgLoTVXni4"
+		},
+		{
+			"key": "authCode",
+			"value": "82d3650a-8005-4c92-b45b-8e6755eb28ee.b67bbc0d-2220-42b5-9bf5-c5e8add78e36.b88ce206-63d6-43b6-87c9-ea09d8c02f32"
+		},
+		{
+			"key": "accessToken",
+			"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJlUktVWG10TFhKMHBBNkxBS29aWko1ZlU0VDhCdmxKdERCb3pXanFFdnhjIn0.eyJleHAiOjE1OTIzMjUxODAsImlhdCI6MTU5MjMyNDg4MCwiYXV0aF90aW1lIjoxNTkyMzI0ODc4LCJqdGkiOiJkYmMxODVmOC0xMjAxLTQ1ZTQtYWNkMC0wNTMyM2MyYTk0YmIiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODMvYXV0aC9yZWFsbXMvYmFlbGR1bmciLCJzdWIiOiJhNTQ2MTQ3MC0zM2ViLTRiMmQtODJkNC1iMDQ4NGU5NmFkN2YiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJsc3NvQ2xpZW50Iiwic2Vzc2lvbl9zdGF0ZSI6ImI2N2JiYzBkLTIyMjAtNDJiNS05YmY1LWM1ZThhZGQ3OGUzNiIsImFjciI6IjEiLCJzY29wZSI6InByb2ZpbGUgd3JpdGUiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJqb2huQHRlc3QuY29tIn0.Y7Vk_xKp3Pa22AlKlqbu_-HZD9qmIXaNQ2XhU75DKsFrh3hwxK4QfGO5HrXX2R84mi8zYaoIp3fcaozKrP0BaLdESTThGEmI2UQQ1tr5DZztWCSb_o0pcpOLQR7Ux0N4LO8SBGeQMo1V9LAHncRwa42kPlytrhyFvyLiSsY9gGv11e_w8j_FdrOwdIwhhDJjmSDoQOKPhYoP5NK6HLEYvv5xqqbReLj5FXcfkEtQ91fT4HSQxaD-_40ohzSmOhGaO_4kUIEqyvf1O1wF9Qsnq8QupsL0BNLvmf_11H4KmJ9GAN_e8d4MZHGhLzuqsowd943v4RA-cYw6G_-OTVyF1g"
+		},
+		{
+			"key": "refreshToken",
+			"value": ""
+		},
+		{
+			"key": "tempCookies",
+			"value": "AUTH_SESSION_ID=b67bbc0d-2220-42b5-9bf5-c5e8add78e36; KC_RESTART=eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwZDkwY2JkNy03MTY0LTQyY2MtODhlMi1kMjE1ZTc5YWU4ZWEifQ.eyJjaWQiOiJsc3NvQ2xpZW50IiwicHR5Ijoib3BlbmlkLWNvbm5lY3QiLCJydXJpIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgyL2xzc28tY2xpZW50L2xvZ2luL29hdXRoMi9jb2RlL2N1c3RvbSIsImFjdCI6IkFVVEhFTlRJQ0FURSIsIm5vdGVzIjp7InNjb3BlIjoid3JpdGUiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODMvYXV0aC9yZWFsbXMvYmFlbGR1bmciLCJyZXNwb25zZV90eXBlIjoiY29kZSIsInJlZGlyZWN0X3VyaSI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4Mi9sc3NvLWNsaWVudC9sb2dpbi9vYXV0aDIvY29kZS9jdXN0b20ifX0.ldi5P3aUI_hmxFOH5swnLuJxTaY8xRVzSmqoXF2FDOI"
+		},
+		{
+			"key": "redirect",
+			"value": ""
+		}
+	]
+}
